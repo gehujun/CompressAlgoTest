@@ -13,13 +13,11 @@
 #include <lz4.h>
 #include <chrono>
 
-using namespace std;
-#define BLOCKSIZE 1024 * 256
+#include "streaming_compression.hpp"
+#include "lpaq1.hpp"
 
-enum MODE{
-    COMPRESS,
-    DECOMPRESS
-};
+using namespace std;
+#define BLOCKSIZE 1024 * 16
 
 enum COMPTYPE{
     ZSTD,
@@ -36,8 +34,12 @@ int main(int argc, char** argv){
     MODE mode;
     const char *input_pathname = NULL, *output_pathname = NULL, *compress_algo = NULL;
     int opt;
-    while((opt = getopt(argc, argv, "cxi:t:o:")) != -1) {
+
+    while((opt = getopt(argc, argv, "fcxi:t:o:b:")) != -1) {
         switch (opt) {
+        case 'f':
+            mode = FILECOMPRESS;
+            break;
         case 'c':
             mode = COMPRESS;
             break;
@@ -78,29 +80,42 @@ int main(int argc, char** argv){
     int readSize = 0;
     int compSize = 0;
     double time = 0;
-    while(readSize = inFp.read(buf,BLOCKSIZE).gcount()){    
-        if(string(compress_algo) == "zstd:22"){
-            auto start = chrono::high_resolution_clock::now();
-            compSize += ZSTD_compress(out, BLOCKSIZE, buf, BLOCKSIZE, 22);
-            auto end = chrono::high_resolution_clock::now();
-            time += chrono::duration_cast<chrono::nanoseconds>(end - start).count() * 1e-9;
-        } else if(string(compress_algo) == "zstd:9"){ 
-            auto start = chrono::high_resolution_clock::now();
-            compSize += ZSTD_compress(out, BLOCKSIZE, buf, BLOCKSIZE, 9);
-            auto end = chrono::high_resolution_clock::now();
-            time += chrono::duration_cast<chrono::nanoseconds>(end - start).count() * 1e-9;
-        } else if(string(compress_algo) == "zstd:1"){
-            auto start = chrono::high_resolution_clock::now();
-            compSize += ZSTD_compress(out, BLOCKSIZE, buf, BLOCKSIZE, 1);
-            auto end = chrono::high_resolution_clock::now();
-            time += chrono::duration_cast<chrono::nanoseconds>(end - start).count() * 1e-9;
-        } else if(string(compress_algo) == "lz4"){
-            auto start = chrono::high_resolution_clock::now();
-            compSize += LZ4_compress_default(buf, out, BLOCKSIZE, BLOCKSIZE);
-            auto end = chrono::high_resolution_clock::now();
-            time += chrono::duration_cast<chrono::nanoseconds>(end - start).count() * 1e-9;
+    if(mode == FILECOMPRESS) {
+        int cLevel = 1;
+        int nbThreads = 4;
+        char* const outFilename = createOutFilename_orDie(input_pathname);
+        compressFile_orDie(input_pathname, output_pathname, 1, 1);
+    } else {
+        while(readSize = inFp.read(buf,BLOCKSIZE).gcount()){    
+            if(string(compress_algo) == "zstd:22"){
+                auto start = chrono::high_resolution_clock::now();
+                compSize += ZSTD_compress(out, BLOCKSIZE, buf, BLOCKSIZE, 22);
+                auto end = chrono::high_resolution_clock::now();
+                time += chrono::duration_cast<chrono::nanoseconds>(end - start).count() * 1e-9;
+            } else if(string(compress_algo) == "zstd:9"){ 
+                auto start = chrono::high_resolution_clock::now();
+                compSize += ZSTD_compress(out, BLOCKSIZE, buf, BLOCKSIZE, 9);
+                auto end = chrono::high_resolution_clock::now();
+                time += chrono::duration_cast<chrono::nanoseconds>(end - start).count() * 1e-9;
+            } else if(string(compress_algo) == "zstd:1"){
+                auto start = chrono::high_resolution_clock::now();
+                compSize += ZSTD_compress(out, BLOCKSIZE, buf, BLOCKSIZE, 1);
+                auto end = chrono::high_resolution_clock::now();
+                time += chrono::duration_cast<chrono::nanoseconds>(end - start).count() * 1e-9;
+            } else if(string(compress_algo) == "lz4"){
+                auto start = chrono::high_resolution_clock::now();
+                compSize += LZ4_compress_default(buf, out, BLOCKSIZE, BLOCKSIZE);
+                auto end = chrono::high_resolution_clock::now();
+                time += chrono::duration_cast<chrono::nanoseconds>(end - start).count() * 1e-9;
+            } else if(string(compress_algo) == "lpaq1"){
+                auto start = chrono::high_resolution_clock::now();
+                compSize += lpaq_compressBlock(buf, readSize, out, 0);
+                auto end = chrono::high_resolution_clock::now();
+                time += chrono::duration_cast<chrono::nanoseconds>(end - start).count() * 1e-9;
+            }
         }
     }
+    
     cout<<"filePath:\t"<<string(input_pathname)<<endl;
     cout<<"origin size: \t"<<originSize;
     cout<<"\t after compress size is : \t"<<compSize<<endl;
