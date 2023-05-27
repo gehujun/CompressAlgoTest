@@ -17,7 +17,8 @@
 #include "lpaq1.hpp"
 
 using namespace std;
-#define BLOCKSIZE 1024 * 16
+#define BLOCKSIZE 1024 * 256
+
 
 enum COMPTYPE{
     ZSTD,
@@ -119,7 +120,7 @@ int main(int argc, char** argv){
     cout<<"filePath:\t"<<string(input_pathname)<<endl;
     cout<<"origin size: \t"<<originSize;
     cout<<"\t after compress size is : \t"<<compSize<<endl;
-    cout<<"compress time is: \t"<<time<<endl;
+    // cout<<"compress time is: \t"<<time<<endl;
 
     return 0;
 }

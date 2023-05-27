@@ -2,6 +2,11 @@
     "files.associations": {
         "iosfwd": "cpp",
         "string": "cpp",
-        "chrono": "cpp"
+        "chrono": "cpp",
+        "memory": "cpp",
+        "random": "cpp"
+    },
+    "files.watcherExclude": {
+        "**/target": true
     }
 }

@@ -810,13 +810,17 @@ public:
     for(int i = 0; i < 6; i++){
         sm[i].reset();
         h[i] = 0;
+        cp[i] = t0;
     }
     m.reset();
     mm.reset();
   }
 };
 
-Predictor::Predictor():pr(2048),t(MEM*2), a1(0x100), a2(0x4000),m(7, 80),mm(MEM) {
+Predictor::Predictor():pr(2048),t(MEM*2),
+    c0(1),c4(0),
+    bcount(0),
+     a1(0x100), a2(0x4000),m(7, 80),mm(MEM) {
 
 }
 
@@ -881,6 +885,7 @@ void Predictor::update(int y) {
     if (*cp[1]) ++order;
   }
   else order=5+(len>=8)+(len>=12)+(len>=16)+(len>=32);
+  int pre0 = sm[0].p(y, *cp[0]);
   m.add(stretch(sm[0].p(y, *cp[0])));
   m.add(stretch(sm[1].p(y, *cp[1])));
   m.add(stretch(sm[2].p(y, *cp[2])));
@@ -987,6 +992,7 @@ Encoder::Encoder(MODE m, char *out):
     for (int i=0; i<4; ++i)
       x=(x<<8)+(getc(archive)&255);
   }
+//   printf("construct a Encoder");
 }
 
 void Encoder::flush() {
@@ -1001,15 +1007,17 @@ void Encoder::flush() {
 U32 lpaq_compressBlock(char *src, int nBytes, char *dst, int level){
     MEM=1<<(level+20);
     // Compress
-    Encoder e(COMPRESS, dst);
+    // Encoder e(COMPRESS, dst);
+    Encoder *e = new Encoder(COMPRESS, dst);
     int c;
     int size = 0;
     for(int i = 0; i < nBytes; i++){
-        e.compress(src[i]);
+        e->compress(src[i]);
     }
-    e.flush();
-    size = e.getPos();
-    e.reset();
+    e->flush();
+    size = e->getPos();
+    // e.reset();
+    delete e;
     // printf("compress a block\n");
     return size;
 }

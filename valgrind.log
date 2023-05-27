@@ -1,0 +1,15 @@
+==3754527== Memcheck, a memory error detector
+==3754527== Copyright (C) 2002-2017, and GNU GPL'd, by Julian Seward et al.
+==3754527== Using Valgrind-3.18.1 and LibVEX; rerun with -h for copyright info
+==3754527== Command: ./test -c -t zstd:9 -i /home/hustsss/dataset/calgary/book2 -o ./result/book1.zstd
+==3754527== Parent PID: 3752662
+==3754527== 
+==3754527== 
+==3754527== HEAP SUMMARY:
+==3754527==     in use at exit: 0 bytes in 0 blocks
+==3754527==   total heap usage: 12 allocs, 12 frees, 11,063,732 bytes allocated
+==3754527== 
+==3754527== All heap blocks were freed -- no leaks are possible
+==3754527== 
+==3754527== For lists of detected and suppressed errors, rerun with: -s
+==3754527== ERROR SUMMARY: 0 errors from 0 contexts (suppressed: 0 from 0)
